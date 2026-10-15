@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Roleta</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+
+        .header h1 {
+            color: #f1c40f;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        #status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #status.online { background: #2ecc71; color: #000; }
+        #status.offline { background: #e74c3c; color: #fff; }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px 25px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-card .label {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .valor {
+            color: #f1c40f;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .jogadores-container {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #333;
+        }
+
+        .jogadores-container h2 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .jogador-card {
+            background: #222;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            transition: all 0.2s;
+        }
+
+        .jogador-card:hover {
+            border-color: #f1c40f;
+        }
+
+        .jogador-info {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .jogador-nome {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bolinha-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .bolinha-status.online {
+            background: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+            animation: piscarStatus 1.5s infinite;
+        }
+
+        @keyframes piscarStatus {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .jogador-saldo {
+            font-size: 14px;
+            color: #2ecc71;
+            margin-top: 4px;
+        }
+
+        .jogador-saldo strong {
+            color: #f1c40f;
+            font-size: 18px;
+        }
+
+        .input-valor {
+            background: #111;
+            border: 2px solid #444;
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 6px;
+            width: 130px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .input-valor:focus {
+            border-color: #f1c40f;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 3px #1e8449;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px #1e8449;
+        }
+
+        .btn-add:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px #1e8449;
+        }
+
+        .btn-remover {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 3px #922b21;
+        }
+
+        .btn-remover:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px #922b21;
+        }
+
+        .botoes-rapidos {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-rapido {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-rapido:hover {
+            background: #f1c40f;
+            color: #000;
+        }
+
+        .sem-jogadores {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            animation: entrarToast 0.3s ease-out;
+            min-width: 250px;
+        }
+
+        .toast.erro {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        @keyframes entrarToast {
+            0% { transform: translateX(400px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎛️ Painel de Controle</h1>
+        <p>Adicione saldo aos jogadores em tempo real</p>
+        <div id="status" class="offline">⚪ Desconectado</div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="label">👥 Total de Jogadores</div>
+            <div class="valor" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">🟢 Online Agora</div>
+            <div class="valor" id="stat-online">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">💰 Saldo Total</div>
+            <div class="valor" id="stat-saldo">R$ 0,00</div>
+        </div>
+    </div>
+
+    <div class="jogadores-container">
+        <h2>👥 Jogadores</h2>
+        <div id="lista-jogadores">
+            <div class="sem-jogadores">Nenhum jogador conectado ainda...</div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // =====================================================
+        // ⚠️⚠️⚠️ COLE AQUI A URL DO SEU SERVIDOR NO RENDER ⚠️⚠️⚠️
+        // =====================================================
+        const SERVIDOR_URL = "https://SEU-APP-AQUI.onrender.com";
+        // =====================================================
+
+        let ws = null;
+        let jogadoresAtuais = [];
+
+        function conectarServidor() {
+            const urlWS = SERVIDOR_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+            console.log('🔌 Painel conectando em:', urlWS);
+
+            ws = new WebSocket(urlWS);
+
+            ws.onopen = () => {
+                console.log('✅ Painel conectado');
+                document.getElementById('status').className = 'online';
+                document.getElementById('status').innerText = '🟢 Conectado';
+
+                ws.send(JSON.stringify({ tipo: 'painel' }));
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const dados = JSON.parse(event.data);
+
+                    if (dados.tipo === 'lista') {
+                        jogadoresAtuais = dados.jogadores;
+                        renderizarJogadores();
+                        atualizarStats();
+                    }
+
+                    if (dados.tipo === 'sucesso') {
+                        mostrarToast(`✅ ${dados.mensagem}`);
+                    }
+
+                    if (dados.tipo === 'erro') {
+                        mostrarToast(`❌ ${dados.mensagem}`, true);
+                    }
+                } catch (e) {
+                    console.error('Erro:', e);
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('status').className = 'offline';
+                document.getElementById('status').innerText = '🔴 Desconectado - reconectando...';
+                setTimeout(conectarServidor, 3000);
+            };
+
+            ws.onerror = () => {
+                document.getElementById('status').className = 'offline';
+                document.getElementById('status').innerText = '🔴 Erro de conexão';
+            };
+        }
+
+        function renderizarJogadores() {
+            const container = document.getElementById('lista-jogadores');
+
+            if (jogadoresAtuais.length === 0) {
+                container.innerHTML = '<div class="sem-jogadores">Nenhum jogador conectado ainda...</div>';
+                return;
+            }
+
+            container.innerHTML = jogadoresAtuais.map(j => `
+                <div class="jogador-card">
+                    <div class="jogador-info">
+                        <div class="jogador-nome">
+                            <span class="bolinha-status ${j.online ? 'online' : ''}"></span>
+                            ${escapeHtml(j.nome)}
+                        </div>
+                        <div class="jogador-saldo">
+                            Saldo: <strong>R$ ${j.saldo.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                    <div class="botoes-rapidos">
+                        <button class="btn-rapido" onclick="addRapido('${escapeHtml(j.nome)}', 10)">+10</button>
+                        <button class="btn-rapido" onclick="addRapido('${escapeHtml(j.nome)}', 50)">+50</button>
+                        <button class="btn-rapido" onclick="addRapido('${escapeHtml(j.nome)}', 100)">+100</button>
+                        <button class="btn-rapido" onclick="addRapido('${escapeHtml(j.nome)}', 500)">+500</button>
+                    </div>
+                    <input type="number" class="input-valor" id="valor-${escapeHtml(j.nome)}" placeholder="Valor" step="0.01" min="0.01">
+                    <button class="btn-add" onclick="adicionarSaldo('${escapeHtml(j.nome)}')">💰 Adicionar</button>
+                    <button class="btn-remover" onclick="removerSaldo('${escapeHtml(j.nome)}')" title="Remover saldo">−</button>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/'/g, "\\'");
+        }
+
+        function atualizarStats() {
+            const total = jogadoresAtuais.length;
+            const online = jogadoresAtuais.filter(j => j.online).length;
+            const saldoTotal = jogadoresAtuais.reduce((acc, j) => acc + j.saldo, 0);
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-online').innerText = online;
+            document.getElementById('stat-saldo').innerText = `R$ ${saldoTotal.toFixed(2)}`;
+        }
+
+        function adicionarSaldo(nome) {
+            const input = document.getElementById(`valor-${nome}`);
+            const valor = parseFloat(input.value);
+
+            if (isNaN(valor) || valor <= 0) {
+                mostrarToast('⚠️ Digite um valor válido!', true);
+                return;
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    tipo: 'adicionarSaldo',
+                    nome: nome,
+                    valor: valor
+                }));
+                input.value = '';
+            } else {
+                mostrarToast('❌ Sem conexão com o servidor', true);
+            }
+        }
+
+        function addRapido(nome, valor) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    tipo: 'adicionarSaldo',
+                    nome: nome,
+                    valor: valor
+                }));
+            }
+        }
+
+        function removerSaldo(nome) {
+            const input = document.getElementById(`valor-${nome}`);
+            const valor = parseFloat(input.value);
+
+            if (isNaN(valor) || valor <= 0) {
+                mostrarToast('⚠️ Digite um valor válido!', true);
+                return;
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    tipo: 'removerSaldo',
+                    nome: nome,
+                    valor: valor
+                }));
+                input.value = '';
+            }
+        }
+
+        function mostrarToast(texto, isErro = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isErro ? ' erro' : '');
+            toast.innerText = texto;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        conectarServidor();
+    </script>
+</body>
+</html>
