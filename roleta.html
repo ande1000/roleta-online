@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Roleta</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ===== TELA DE CADASTRO ===== */
+        #tela-cadastro {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        #tela-cadastro h1 {
+            color: #f1c40f;
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(241, 196, 15, 0.8);
+        }
+
+        #tela-cadastro p {
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        #tela-cadastro input {
+            background: #222;
+            border: 2px solid #f1c40f;
+            color: #fff;
+            padding: 15px 25px;
+            font-size: 20px;
+            border-radius: 8px;
+            width: 320px;
+            max-width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        #tela-cadastro input:focus {
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.6);
+        }
+
+        #tela-cadastro button {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            color: #000;
+            border: none;
+            padding: 15px 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 6px #b7950b;
+            transition: all 0.15s;
+        }
+
+        #tela-cadastro button:active {
+            box-shadow: 0 2px #b7950b;
+            transform: translateY(4px);
+        }
+
+        #tela-cadastro .erro {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        /* ===== INFO DO JOGADOR ===== */
+        #info-jogador {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #222;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 2px solid #f1c40f;
+            z-index: 100;
+        }
+
+        #info-jogador .nome {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        #info-jogador .status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            margin-right: 6px;
+            animation: piscarOnline 1.5s infinite;
+        }
+
+        @keyframes piscarOnline {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            max-width: 600px;
+        }
+
+        #saldo-box {
+            background-color: #2ecc71;
+            color: #000;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 4px;
+            border: 2px solid #27ae60;
+            transition: background 0.3s;
+        }
+
+        .bet-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #f5eedc;
+            padding: 10px 20px;
+            border-radius: 6px;
+            color: #000;
+        }
+
+        .bet-btn {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.15s;
+        }
+
+        .bet-btn:hover:not(:disabled) { background-color: #555; }
+        .bet-btn:active:not(:disabled) { transform: scale(0.95); }
+        .bet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .bet-display {
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 8px 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 90px;
+            text-align: center;
+        }
+
+        #multiplicador-info {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #fff;
+            box-shadow: 0 0 15px rgba(155, 89, 182, 0.6);
+            margin-top: 5px;
+        }
+
+        #multiplicador-info .mult-destaque {
+            font-size: 20px;
+            color: #f1c40f;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 10px 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            background: #000;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 20px solid #e74c3c;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+
+        @keyframes piscarPonteiro {
+            0% { border-top-color: #e74c3c; transform: translateX(-50%) scale(1); }
+            50% { border-top-color: #f1c40f; transform: translateX(-50%) scale(1.15); }
+            100% { border-top-color: #3498db; transform: translateX(-50%) scale(1); }
+        }
+
+        .pointer.piscando { animation: piscarPonteiro 0.3s infinite; }
+
+        .btn-jogar {
+            background-color: #f5eedc;
+            color: #000;
+            border: none;
+            padding: 12px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 4px #b5a987;
+        }
+
+        .btn-jogar:active {
+            box-shadow: 0 2px #b5a987;
+            transform: translateY(2px);
+        }
+
+        .btn-jogar:disabled {
+            background-color: #b5a987;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        @keyframes ledSaldo {
+            0% { background-color: #f1c40f; }
+            33% { background-color: #e74c3c; }
+            66% { background-color: #3498db; }
+            100% { background-color: #f1c40f; }
+        }
+
+        .led-saldo-ativo { animation: ledSaldo 0.5s infinite; }
+
+        #giros-gratis-info {
+            font-size: 16px;
+            color: #f1c40f;
+            font-weight: bold;
+            min-height: 20px;
+            text-align: center;
+        }
+
+        #mensagem-ganho {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #fff;
+            padding: 30px 60px;
+            border-radius: 15px;
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(46, 204, 113, 0.9);
+            border: 4px solid #f1c40f;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #mensagem-ganho .titulo { font-size: 28px; display: block; margin-bottom: 10px; color: #f1c40f; }
+        #mensagem-ganho .valor { font-size: 52px; display: block; color: #fff; }
+        #mensagem-ganho .multiplicador { font-size: 20px; display: block; margin-top: 10px; color: #f1c40f; }
+        #mensagem-ganho.mostrar { animation: aparecerGanho 3s ease-out forwards; }
+
+        @keyframes aparecerGanho {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8) rotate(0deg); opacity: 0; }
+        }
+
+        #mensagem-ganho.giros-gratis {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            box-shadow: 0 0 40px rgba(241, 196, 15, 0.9);
+        }
+
+        .confete {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 998;
+            pointer-events: none;
+            animation: cairConfete 2.5s linear forwards;
+        }
+
+        @keyframes cairConfete {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        #notificacoes-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            max-width: 350px;
+        }
+
+        .notificacao {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border-left: 6px solid #f1c40f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: entrarNotificacao 0.5s ease-out forwards;
+            min-width: 250px;
+        }
+
+        .notificacao .icone { font-size: 28px; flex-shrink: 0; }
+        .notificacao .conteudo { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .notificacao .titulo-notif { font-size: 13px; color: #f1c40f; text-transform: uppercase; }
+        .notificacao .valor-notif { font-size: 20px; color: #fff; font-weight: bold; }
+        .notificacao.recarga {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-left-color: #fff;
+        }
+        .notificacao.saindo { animation: sairNotificacao 0.5s ease-in forwards; }
+
+        @keyframes entrarNotificacao {
+            0% { transform: translateX(400px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes sairNotificacao {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(400px); opacity: 0; }
+        }
+
+        .btn-som {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            color: #fff;
+            border: 2px solid #f5eedc;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .btn-som.mutado { background: #e74c3c; }
+
+        #aviso-giros-auto {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            color: #000;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 1002;
+            display: none;
+            border: 2px solid #fff;
+        }
+
+        #aviso-giros-auto.ativo { display: block; animation: pulsarAviso 1s infinite; }
+
+        @keyframes pulsarAviso {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        #status-conexao {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #666;
+            z-index: 100;
+        }
+
+        #status-conexao.online { color: #2ecc71; }
+        #status-conexao.offline { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TELA DE CADASTRO ===== -->
+    <div id="tela-cadastro">
+        <h1>🎰 ROLETA</h1>
+        <p>Digite seu nome para começar</p>
+        <input type="text" id="input-nome" placeholder="Seu nome" maxlength="20" autofocus>
+        <button onclick="entrarNoJogo()">ENTRAR</button>
+        <div class="erro" id="erro-cadastro"></div>
+    </div>
+
+    <!-- ===== INFO DO JOGADOR ===== -->
+    <div id="info-jogador" style="display:none;">
+        <span class="status"></span>
+        <span class="nome" id="nome-jogador-display">-</span>
+    </div>
+
+    <button class="btn-som" id="btnSom" onclick="toggleSom()" style="display:none;">🔊</button>
+
+    <div id="aviso-giros-auto"></div>
+
+    <div class="main-container" id="jogo-container" style="display:none;">
+        <div class="top-bar">
+            <div id="saldo-box">saldo: R$ 0,00</div>
+        </div>
+
+        <div class="bet-controls">
+            <button class="bet-btn" id="btnMenos" onclick="mudarAposta(-1)">-</button>
+            <div>aposta: <span id="aposta-display" class="bet-display">0.50</span></div>
+            <button class="bet-btn" id="btnMais" onclick="mudarAposta(1)">+</button>
+        </div>
+
+        <div id="multiplicador-info">
+            Multiplicador: <span class="mult-destaque" id="mult-display">1x</span>
+        </div>
+
+        <div id="giros-gratis-info"></div>
+
+        <div class="wheel-container">
+            <div class="pointer" id="pointerEl"></div>
+            <canvas id="wheelCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <button class="btn-jogar" id="btnJogar" onclick="girarRoleta()">jogar</button>
+    </div>
+
+    <div id="mensagem-ganho">
+        <span class="titulo">🎉 VOCÊ GANHOU! 🎉</span>
+        <span class="valor" id="mensagem-valor">R$ 0,00</span>
+        <span class="multiplicador" id="mensagem-mult"></span>
+    </div>
+
+    <div id="notificacoes-container"></div>
+
+    <div id="status-conexao" class="offline">⚪ Desconectado</div>
+
+    <script>
+        // =====================================================
+        // ⚠️⚠️⚠️ COLE AQUI A URL DO SEU SERVIDOR NO RENDER ⚠️⚠️⚠️
+        // =====================================================
+        const SERVIDOR_URL = "https://SEU-APP-AQUI.onrender.com";
+        // =====================================================
+
+        let ws = null;
+        let nomeJogador = null;
+        let saldo = 0;
+        let valorAposta = 0.50;
+        let girosAutoRestantes = 0;
+        let emAndamento = false;
+        let somAtivo = true;
+
+        const VALORES_APOSTA = [
+            { valor: 0.50, multiplicador: 1 },
+            { valor: 1.00, multiplicador: 2 },
+            { valor: 1.50, multiplicador: 3 },
+            { valor: 2.00, multiplicador: 3 },
+            { valor: 3.00, multiplicador: 4 },
+            { valor: 4.00, multiplicador: 5 },
+            { valor: 5.00, multiplicador: 6 }
+        ];
+        let indiceApostaAtual = 0;
+
+        const VALOR_POR_GIRO_AUTO = 1.20;
+        const QTD_GIROS_AUTO = 3;
+
+        // ===== CONEXÃO WEBSOCKET =====
+        function conectarServidor() {
+            const urlWS = SERVIDOR_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+            console.log('🔌 Conectando em:', urlWS);
+
+            ws = new WebSocket(urlWS);
+
+            ws.onopen = () => {
+                console.log('✅ Conectado ao servidor');
+                document.getElementById('status-conexao').className = 'online';
+                document.getElementById('status-conexao').innerText = '🟢 Conectado';
+
+                if (nomeJogador) {
+                    ws.send(JSON.stringify({ tipo: 'jogador', nome: nomeJogador }));
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const dados = JSON.parse(event.data);
+
+                    if (dados.tipo === 'saldo') {
+                        const saldoAnterior = saldo;
+                        saldo = dados.saldo;
+                        atualizarInterface();
+
+                        // Se o saldo aumentou (recarga do admin), mostra notificação
+                        if (saldo > saldoAnterior && saldoAnterior >= 0 && nomeJogador) {
+                            const diferenca = saldo - saldoAnterior;
+                            if (diferenca > 0) {
+                                mostrarNotificacao('💳 Saldo Adicionado!', `+ R$ ${diferenca.toFixed(2)}`, true);
+                                tocarSomBonus();
+                                dispararEfeitosVisuais();
+                            }
+                        }
+                    }
+
+                    if (dados.tipo === 'erro') {
+                        console.error('Erro do servidor:', dados.mensagem);
+                    }
+                } catch (e) {
+                    console.error('Erro ao processar mensagem:', e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('❌ Desconectado do servidor');
+                document.getElementById('status-conexao').className = 'offline';
+                document.getElementById('status-conexao').innerText = '🔴 Desconectado - reconectando...';
+                setTimeout(conectarServidor, 3000);
+            };
+
+            ws.onerror = (e) => {
+                console.error('Erro WebSocket:', e);
+            };
+        }
+
+        // ===== ENTRAR NO JOGO =====
+        function entrarNoJogo() {
+            const nome = document.getElementById('input-nome').value.trim();
+
+            if (!nome) {
+                document.getElementById('erro-cadastro').innerText = 'Digite um nome válido';
+                return;
+            }
+
+            if (nome.length < 2) {
+                document.getElementById('erro-cadastro').innerText = 'O nome deve ter pelo menos 2 letras';
+                return;
+            }
+
+            nomeJogador = nome;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'jogador', nome: nomeJogador }));
+            }
+
+            document.getElementById('tela-cadastro').style.display = 'none';
+            document.getElementById('jogo-container').style.display = 'flex';
+            document.getElementById('btnSom').style.display = 'block';
+            document.getElementById('info-jogador').style.display = 'block';
+            document.getElementById('nome-jogador-display').innerText = nomeJogador;
+
+            atualizarInterface();
+            desenharRoleta();
+        }
+
+        document.getElementById('input-nome').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') entrarNoJogo();
+        });
+
+        // ===== SISTEMA DE ÁUDIO =====
+        let audioCtx = null;
+
+        function iniciarAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        let somGiroNodes = null;
+
+        function iniciarSomGiro() {
+            if (!somAtivo) return;
+            const actx = iniciarAudioContext();
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            const filter = actx.createBiquadFilter();
+            osc.type = 'sawtooth';
+            osc.frequency.value = 80;
+            filter.type = 'bandpass';
+            filter.frequency.value = 400;
+            filter.Q.value = 1.5;
+            gain.gain.value = 0.08;
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(actx.destination);
+            osc.start();
+            const lfo = actx.createOscillator();
+            const lfoGain = actx.createGain();
+            lfo.frequency.value = 25;
+            lfoGain.gain.value = 0.05;
+            lfo.connect(lfoGain);
+            lfoGain.connect(gain.gain);
+            lfo.start();
+            somGiroNodes = { osc, gain, lfo, filter };
+        }
+
+        function pararSomGiro() {
+            if (somGiroNodes && audioCtx) {
+                try {
+                    const t = audioCtx.currentTime;
+                    somGiroNodes.gain.gain.cancelScheduledValues(t);
+                    somGiroNodes.gain.gain.setValueAtTime(somGiroNodes.gain.gain.value, t);
+                    somGiroNodes.gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                    const nodes = somGiroNodes;
+                    setTimeout(() => {
+                        try { nodes.osc.stop(); nodes.lfo.stop(); } catch (e) {}
+                    }, 350);
+                    somGiroNodes = null;
+                } catch (e) { somGiroNodes = null; }
+            }
+        }
+
+        function tocarSomVitoria() {
+            if (!somAtivo) return;
+            const actx = iniciarAudioContext();
+            const agora = actx.currentTime;
+            const notas = [523.25, 659.25, 783.99, 1046.50];
+            const duracao = 0.18;
+            notas.forEach((freq, i) => {
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                const inicio = agora + i * duracao;
+                gain.gain.setValueAtTime(0, inicio);
+                gain.gain.linearRampToValueAtTime(0.25, inicio + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, inicio + duracao * 1.5);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start(inicio);
+                osc.stop(inicio + duracao * 2);
+            });
+            const oscFinal = actx.createOscillator();
+            const gainFinal = actx.createGain();
+            oscFinal.type = 'triangle';
+            oscFinal.frequency.value = 1046.50;
+            const inicioFinal = agora + notas.length * duracao;
+            gainFinal.gain.setValueAtTime(0, inicioFinal);
+            gainFinal.gain.linearRampToValueAtTime(0.3, inicioFinal + 0.03);
+            gainFinal.gain.exponentialRampToValueAtTime(0.001, inicioFinal + 0.6);
+            oscFinal.connect(gainFinal);
+            gainFinal.connect(actx.destination);
+            oscFinal.start(inicioFinal);
+            oscFinal.stop(inicioFinal + 0.7);
+        }
+
+        function tocarSomBonus() {
+            if (!somAtivo) return;
+            const actx = iniciarAudioContext();
+            const agora = actx.currentTime;
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, agora);
+            osc.frequency.exponentialRampToValueAtTime(1600, agora + 0.5);
+            gain.gain.setValueAtTime(0, agora);
+            gain.gain.linearRampToValueAtTime(0.25, agora + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.7);
+            osc.connect(gain);
+            gain.connect(actx.destination);
+            osc.start(agora);
+            osc.stop(agora + 0.8);
+        }
+
+        function tocarSomClique() {
+            if (!somAtivo) return;
+            const actx = iniciarAudioContext();
+            const agora = actx.currentTime;
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = 800;
+            gain.gain.setValueAtTime(0.1, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.08);
+            osc.connect(gain);
+            gain.connect(actx.destination);
+            osc.start(agora);
+            osc.stop(agora + 0.1);
+        }
+
+        function toggleSom() {
+            somAtivo = !somAtivo;
+            const btn = document.getElementById('btnSom');
+            if (somAtivo) {
+                btn.innerText = '🔊';
+                btn.classList.remove('mutado');
+                tocarSomClique();
+            } else {
+                btn.innerText = '🔇';
+                btn.classList.add('mutado');
+                pararSomGiro();
+            }
+        }
+
+        // ===== ROLETA =====
+        const setores = [
+            { letra: 'I', premio: 0.00 },
+            { letra: 'P', premio: 0.20 },
+            { letra: 'L', premio: 0.00 },
+            { letra: 'K', premio: 0.00 },
+            { letra: 'G', premio: 0.05 },
+            { letra: 'W', premio: 0.00 },
+            { letra: 'S', premio: 0.00 },
+            { letra: 'A', premio: 0.01 },
+            { letra: 'Ç', premio: 0.75 },
+            { letra: 'C', premio: 0.07 },
+            { letra: 'N', premio: 0.70 },
+            { letra: 'F', premio: 0.00, ehGiroAuto: true },
+            { letra: 'M', premio: 0.00 },
+            { letra: 'Q', premio: 0.40 },
+            { letra: 'V', premio: 0.30 },
+            { letra: 'H', premio: 0.19 }
+        ];
+
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const numSetores = setores.length;
+        const arc = Math.PI * 2 / numSetores;
+        let anguloAtual = 0;
+
+        let coresLedLinhas = ['#3498db', '#e74c3c', '#9b59b6', '#ffffff'];
+        let indiceCorLed = 0;
+        let animacaoLedId = null;
+
+        function getMultiplicadorAtual() {
+            return VALORES_APOSTA[indiceApostaAtual].multiplicador;
+        }
+
+        function atualizarInterface() {
+            document.getElementById('saldo-box').innerText = `saldo: R$ ${saldo.toFixed(2)}`;
+            document.getElementById('aposta-display').innerText = valorAposta.toFixed(2);
+            document.getElementById('mult-display').innerText = `${getMultiplicadorAtual()}x`;
+
+            const infoGiros = document.getElementById('giros-gratis-info');
+            infoGiros.innerText = girosAutoRestantes > 0 ? `🎁 Giros automáticos restantes: ${girosAutoRestantes}` : '';
+
+            const btnMenos = document.getElementById('btnMenos');
+            const btnMais = document.getElementById('btnMais');
+            if (btnMenos && btnMais) {
+                btnMenos.disabled = (indiceApostaAtual === 0) || emAndamento;
+                btnMais.disabled = (indiceApostaAtual === VALORES_APOSTA.length - 1) || emAndamento;
+            }
+        }
+
+        function desenharRoleta(corLinhaOverride = '#ff0000') {
+            const centro = canvas.width / 2;
+            const raio = canvas.width / 2 - 10;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            setores.forEach((setor, i) => {
+                const anguloInicio = anguloAtual + i * arc;
+                const anguloFim = anguloInicio + arc;
+
+                ctx.beginPath();
+                ctx.moveTo(centro, centro);
+                ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+                ctx.fillStyle = '#f5eedc';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(centro, centro);
+                ctx.lineTo(centro + raio * Math.cos(anguloInicio), centro + raio * Math.sin(anguloInicio));
+                ctx.strokeStyle = corLinhaOverride;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centro, centro);
+                ctx.rotate(anguloInicio + arc / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 22px Arial';
+                ctx.fillText(setor.letra, raio - 25, 10);
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.arc(centro, centro, 45, 0, 2 * Math.PI);
+            ctx.fillStyle = '#2ecc71';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#27ae60';
+            ctx.stroke();
+        }
+
+        function mudarAposta(direcao) {
+            if (emAndamento) return;
+            const novoIndice = indiceApostaAtual + direcao;
+            if (novoIndice < 0 || novoIndice >= VALORES_APOSTA.length) return;
+            tocarSomClique();
+            indiceApostaAtual = novoIndice;
+            valorAposta = VALORES_APOSTA[indiceApostaAtual].valor;
+            atualizarInterface();
+        }
+
+        function mostrarNotificacao(titulo, valor, isRecarga = false) {
+            const container = document.getElementById('notificacoes-container');
+            const notif = document.createElement('div');
+            notif.className = 'notificacao' + (isRecarga ? ' recarga' : '');
+            notif.innerHTML = `
+                <div class="icone">${isRecarga ? '💳' : '💰'}</div>
+                <div class="conteudo">
+                    <div class="titulo-notif">${titulo}</div>
+                    <div class="valor-notif">${valor}</div>
+                </div>
+            `;
+            container.appendChild(notif);
+            setTimeout(() => {
+                notif.classList.add('saindo');
+                setTimeout(() => notif.remove(), 500);
+            }, 4000);
+        }
+
+        function mostrarMensagemGanho(valor, isGirosGratis = false, textoGiros = '', multiplicador = 1) {
+            const msgEl = document.getElementById('mensagem-ganho');
+            const valorEl = document.getElementById('mensagem-valor');
+            const tituloEl = msgEl.querySelector('.titulo');
+            const multEl = document.getElementById('mensagem-mult');
+
+            if (isGirosGratis) {
+                tituloEl.innerText = '🎁 BÔNUS! 🎁';
+                valorEl.innerText = textoGiros;
+                valorEl.style.fontSize = '32px';
+                multEl.innerText = '';
+                msgEl.classList.add('giros-gratis');
+            } else {
+                tituloEl.innerText = '🎉 VOCÊ GANHOU! 🎉';
+                valorEl.innerText = `R$ ${valor.toFixed(2)}`;
+                valorEl.style.fontSize = '52px';
+                multEl.innerText = multiplicador > 1 ? `🎯 Multiplicador ${multiplicador}x` : '';
+                msgEl.classList.remove('giros-gratis');
+            }
+
+            msgEl.classList.remove('mostrar');
+            void msgEl.offsetWidth;
+            msgEl.classList.add('mostrar');
+            criarConfetes();
+        }
+
+        function criarConfetes() {
+            const cores = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#ffffff'];
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    const confete = document.createElement('div');
+                    confete.className = 'confete';
+                    confete.style.left = Math.random() * 100 + 'vw';
+                    confete.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+                    confete.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+                    confete.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                    document.body.appendChild(confete);
+                    setTimeout(() => confete.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function dispararEfeitosVisuais() {
+            const saldoBox = document.getElementById('saldo-box');
+            saldoBox.classList.add('led-saldo-ativo');
+            document.getElementById('pointerEl').classList.add('piscando');
+
+            if (animacaoLedId) clearInterval(animacaoLedId);
+            animacaoLedId = setInterval(() => {
+                indiceCorLed = (indiceCorLed + 1) % coresLedLinhas.length;
+                desenharRoleta(coresLedLinhas[indiceCorLed]);
+            }, 150);
+
+            setTimeout(() => {
+                saldoBox.classList.remove('led-saldo-ativo');
+                document.getElementById('pointerEl').classList.remove('piscando');
+                if (animacaoLedId) { clearInterval(animacaoLedId); animacaoLedId = null; }
+                desenharRoleta('#ff0000');
+            }, 3500);
+        }
+
+        function mostrarAvisoGirosAuto(texto) {
+            const aviso = document.getElementById('aviso-giros-auto');
+            aviso.innerText = texto;
+            aviso.classList.add('ativo');
+        }
+
+        function esconderAvisoGirosAuto() {
+            document.getElementById('aviso-giros-auto').classList.remove('ativo');
+        }
+
+        function salvarSaldoNoServidor() {
+            if (ws && ws.readyState === WebSocket.OPEN && nomeJogador) {
+                ws.send(JSON.stringify({
+                    tipo: 'atualizarSaldoJogo',
+                    novoSaldo: saldo
+                }));
+            }
+        }
+
+        function executarGiro() {
+            return new Promise((resolve) => {
+                emAndamento = true;
+                document.getElementById('btnJogar').disabled = true;
+                atualizarInterface();
+                iniciarSomGiro();
+
+                const tempoGiro = 10000;
+                const voltasCompletas = 20;
+                const setorEscolhido = Math.floor(Math.random() * numSetores);
+
+                const anguloPorSetor = (Math.PI * 2) / numSetores;
+                const anguloAlvoBase = (Math.PI * 1.5) - (setorEscolhido * anguloPorSetor) - (anguloPorSetor / 2);
+                const anguloAtualNormalizado = ((anguloAtual % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                let diferenca = ((anguloAlvoBase - anguloAtualNormalizado) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+                const anguloFinal = anguloAtual + (voltasCompletas * Math.PI * 2) + diferenca;
+                const anguloInicial = anguloAtual;
+                const inicioTempo = performance.now();
+
+                function animarGiro(tempoAtual) {
+                    const tempoDecorrido = tempoAtual - inicioTempo;
+                    const progresso = Math.min(tempoDecorrido / tempoGiro, 1);
+                    const easeOut = 1 - Math.pow(1 - progresso, 3);
+                    anguloAtual = anguloInicial + (anguloFinal - anguloInicial) * easeOut;
+                    desenharRoleta('#ff0000');
+
+                    if (progresso < 1) {
+                        requestAnimationFrame(animarGiro);
+                    } else {
+                        anguloAtual = anguloFinal;
+                        desenharRoleta('#ff0000');
+                        pararSomGiro();
+                        emAndamento = false;
+                        resolve(setorEscolhido);
+                    }
+                }
+                requestAnimationFrame(animarGiro);
+            });
+        }
+
+        async function processarResultadoGiro(setorEscolhido) {
+            const resultado = setores[setorEscolhido];
+
+            if (resultado.ehGiroAuto) {
+                girosAutoRestantes += QTD_GIROS_AUTO;
+                atualizarInterface();
+                tocarSomBonus();
+                mostrarNotificacao('🎁 BÔNUS ESPECIAL!', `+${QTD_GIROS_AUTO} Giros Automáticos`);
+                mostrarMensagemGanho(0, true, `3 GIROS DE R$ ${VALOR_POR_GIRO_AUTO.toFixed(2)}`);
+                await new Promise(r => setTimeout(r, 3200));
+                await executarGirosAutomaticos();
+                return;
+            }
+
+            if (resultado.premio > 0) {
+                const multiplicador = getMultiplicadorAtual();
+                const premioFinal = resultado.premio * multiplicador;
+                saldo += premioFinal;
+                atualizarInterface();
+                salvarSaldoNoServidor();
+                dispararEfeitosVisuais();
+                tocarSomVitoria();
+                let textoNotif = `+ R$ ${premioFinal.toFixed(2)}`;
+                if (multiplicador > 1) textoNotif += ` (${multiplicador}x)`;
+                mostrarNotificacao('Você Ganhou!', textoNotif);
+                mostrarMensagemGanho(premioFinal, false, '', multiplicador);
+            }
+        }
+
+        async function executarGirosAutomaticos() {
+            const totalGiros = girosAutoRestantes;
+            while (girosAutoRestantes > 0) {
+                const numeroGiro = totalGiros - girosAutoRestantes + 1;
+                mostrarAvisoGirosAuto(`🎰 Giro Automático ${numeroGiro}/${totalGiros} - R$ ${VALOR_POR_GIRO_AUTO.toFixed(2)}`);
+                await new Promise(r => setTimeout(r, 1000));
+                await executarGiro();
+                saldo += VALOR_POR_GIRO_AUTO;
+                atualizarInterface();
+                salvarSaldoNoServidor();
+                tocarSomVitoria();
+                dispararEfeitosVisuais();
+                mostrarNotificacao(`Giro ${numeroGiro}/${totalGiros}`, `+ R$ ${VALOR_POR_GIRO_AUTO.toFixed(2)}`);
+                girosAutoRestantes--;
+                atualizarInterface();
+                if (girosAutoRestantes > 0) await new Promise(r => setTimeout(r, 2000));
+            }
+            esconderAvisoGirosAuto();
+            document.getElementById('btnJogar').disabled = false;
+            emAndamento = false;
+            atualizarInterface();
+        }
+
+        async function girarRoleta() {
+            if (emAndamento) return;
+            iniciarAudioContext();
+
+            if (saldo < valorAposta) {
+                alert('Saldo insuficiente! Peça ao admin para adicionar saldo.');
+                return;
+            }
+
+            saldo -= valorAposta;
+            atualizarInterface();
+            salvarSaldoNoServidor();
+
+            const setorEscolhido = await executarGiro();
+            await processarResultadoGiro(setorEscolhido);
+
+            if (girosAutoRestantes === 0) {
+                document.getElementById('btnJogar').disabled = false;
+                emAndamento = false;
+                atualizarInterface();
+            }
+        }
+
+        // ===== INICIA A CONEXÃO =====
+        conectarServidor();
+    </script>
+</body>
+</html>
